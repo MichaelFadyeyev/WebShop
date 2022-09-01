@@ -17,6 +17,10 @@ namespace WebShop.Models
         public int ProductId { get; set; }
 
         [Required]
+        [Display(Name = "Кількість")]
+        public int Quantity { get; set; }
+
+        [Required]
         [Display(Name = "Користувач")]
         public string UserId { get; set; }
 
