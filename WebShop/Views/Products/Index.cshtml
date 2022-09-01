@@ -1,0 +1,144 @@
+﻿@*@model IEnumerable<WebShop.Models.Product>*@
+@model WebShop.ViewModels.FilterViewModel
+@addTagHelper *, WebShop
+
+@{
+    ViewData["Title"] = "Каталог товарів";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-9">
+        <h1>Каталог товарів</h1>
+        @if (User.Identity.Name == "admin123@ukr.net")
+        {
+            <a asp-action="Create" asp-route-id="@Model.Products">Додати товар</a>
+            <br />
+        }
+    </div>
+
+    <div class="col-md-3" style="text-align: right;">
+        <span id="count" style="color: green; font-weight: bold;">0</span>
+        /
+        <span id="amount" style="color: red; font-weight: bold;">0.0</span>
+        &nbsp;&nbsp;&nbsp;
+        <a asp-controller="CartItems" asp-action="Index" title="Перейти до кошика">
+            <img src="~/Images/cart.png" alt="." style="width: 50px" />
+        </a>
+    </div>
+</div>
+
+
+<p>
+    @if (User.Identity.Name == "admin_123@ukr.net")
+    {
+
+        <a asp-action="Create">Create New</a>
+    }
+</p>
+
+
+<div class="row" id="gallery">
+    <!-- col-1 -->
+    <div class="col-md-9" style="padding: 0 20px">
+        <div class="row">
+            @foreach (var item in Model.Products)
+            {
+                <div class="col-md-3">
+                    <div class="card" style="width: 100%; margin-bottom: 10px">
+                        <img src="@item.Image" class="card-img-top" alt="-" style="height: 150px" />
+                        @*<img src="@Html.DisplayFor(modelItem=>item.Image)" class="card-img-top" alt="-" style="height: 150px" />*@
+                        <div class="card-body" style="text-align: center">
+
+                            <input type="hidden" class="productId" value="@item.Id" />
+                            <h5 class="card-title">@item.Name</h5>
+                            <h6>@item.Category.CategoryName</h6>
+                            <h4 style="color: red">@item.Price</h4>
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <button class="addToCart btn btn-sm btn-success">До кошика</button>
+                            }
+                            <div style="margin-top: 15px; font-size: 0.9em">
+                                <a asp-action="Details" asp-route-id="@item.Id">Переглянути</a>
+                                <br />
+                                @if (User.Identity.Name == "admin123@ukr.net")
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>
+                                    <br />
+                                    <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+                                    <br />
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <p>
+            <page-link page-model="Model.PageViewModel" page-action="Index"></page-link>
+        </p>
+    </div>
+    <!-- col-2 -->
+    <div class="col-md-3" style="padding: 15px; border: 1px solid silver; text-align: center">
+        <h2 style="text-align: center">Фільтри</h2>
+        <hr />
+        <form method="get">
+            <div class="form-group">
+                <label class="control-label">Категорія</label>
+                <select name="cid" asp-items="Model.Categories" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Виробники</label>
+                <select name="pid" asp-items="Model.Producers" class="form-control"></select>
+            </div>
+            <p>
+                <input type="submit" value="Фільтр" class="btn btn-sm btn-primary" style="width: 120px;" />
+            </p>
+        </form>
+    </div>
+</div>
+
+@section scripts
+    {
+    <script>
+        $(document).ready(() => {
+            // 1
+            //alert("Document Ready")
+            $(`.addToCart`).click((event) => {
+                let target = $(event.target);
+                let parent = target.parent();
+                let hidden = parent.find(`.productId`);
+                let pid = parseInt(hidden.val());
+                //let pid = parseInt($(event.target).parent().find(`.productId`).val());
+                $.ajax({
+                    type: 'POST',
+                    url: '/CartItems/AddProductToCart',
+                    data: { productId: pid },
+                    dataType: 'json',
+                    success: function(result) {
+                        $('#count').html(result.count);
+                        $('#amount').html(result.amount);
+                    }
+                });
+                //alert(`Товап із ID: ${pid} - успішно доданий до кошика`);
+            });
+
+            // 2
+            $.ajax({
+                type: 'POST',
+                url: 'CartItems/GetStatInfo',
+                data: { productId: pid },
+                dataType: 'json',
+                success: function(result) {
+                    $('#count').html(result.count);
+                    $('#amount').html(result.amount);
+                }
+            });
+
+
+        });
+    </script>
+}
+
+
+

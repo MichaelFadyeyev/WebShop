@@ -1,0 +1,4 @@
+﻿No type was specified for the decimal property 'Price' on entity type 'Product'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate a
+ll the values in 'OnModelCreating' using 'HasColumnType()', specify precision and scale using 'HasPrecision()' or configure a value converter using 'HasConversion()'.
+
+http://jameschambers.com/2019/06/No-Type-Was-Specified-for-the-Decimal-Column/
