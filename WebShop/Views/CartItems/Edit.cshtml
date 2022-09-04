@@ -1,7 +1,7 @@
 ﻿@model WebShop.Models.CartItem
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Редагувати";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -15,11 +15,13 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <br/>
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="ProductId" />
+            <br />
             <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <input asp-for="UserId" class="form-control" asp-items="ViewBag.UserId" type="number"/>
-                <span asp-validation-for="UserId" class="text-danger"></span>
+                <label asp-for="Quantity" class="control-label"></label>
+                <input asp-for="Quantity" class="form-control" asp-items="@Model.Quantity" type="number" min="1" />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Змінити кількість" class="btn btn-primary" />

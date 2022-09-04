@@ -32,14 +32,23 @@ namespace WebShop.Controllers
         [HttpPost]
         public StatInfo AddProductToCart(int productId)
         {
-
-            var currentUser = _context.ApplicationUsers
-                .Single(u => u.UserName == User.Identity.Name);
-            _context.CartItems.Add(new CartItem()
+            var currentUserCartItems = _context.CartItems
+                .Include(x => x.ApplicationUser)
+                .Include(x => x.Product).Where(x => x.ApplicationUser.UserName == User.Identity.Name).ToList();
+            var existingItem = currentUserCartItems.Where(c => c.ProductId == productId).FirstOrDefault();
+            if (existingItem != null)
             {
-                UserId = currentUser.Id,
-                ProductId = productId
-            });
+                existingItem.Quantity++;
+            }
+            else
+            {
+                _context.CartItems.Add(new CartItem()
+                {
+                    UserId = currentUserCartItems.First().UserId,
+                    ProductId = productId,
+                    Quantity = 1
+                });
+            }
             _context.SaveChanges();
 
             return GetStatInfo();
@@ -65,7 +74,7 @@ namespace WebShop.Controllers
                 count = currentUserCartItems.Count;
                 foreach (var cartItem in currentUserCartItems)
                 {
-                    amount += cartItem.Product.Price;
+                    amount += cartItem.Product.Price * cartItem.Quantity;
                 }
                 StatInfo si = new() { Count = count, Amount = amount };
                 return si;
@@ -137,11 +146,12 @@ namespace WebShop.Controllers
             }
 
             var cartItem = await _context.CartItems.FindAsync(id);
-            cartItem.Product = _context.Products.Single(p => p.Id == id);
+            cartItem.Product = _context.Products.Where(p => p.Id == cartItem.ProductId).FirstOrDefault();
             if (cartItem == null)
             {
                 return NotFound();
             }
+
             ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", cartItem.UserId);
             ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Image", cartItem.ProductId);
             return View(cartItem);
@@ -152,7 +162,7 @@ namespace WebShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ProductId,UserId")] CartItem cartItem)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ProductId,UserId")] CartItem cartItem, int quantity)
         {
             if (id != cartItem.Id)
             {
@@ -163,6 +173,7 @@ namespace WebShop.Controllers
             {
                 try
                 {
+                    if (quantity > 0) cartItem.Quantity = quantity;
                     _context.Update(cartItem);
                     await _context.SaveChangesAsync();
                 }

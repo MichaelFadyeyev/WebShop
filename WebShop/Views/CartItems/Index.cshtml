@@ -3,10 +3,16 @@
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    decimal sum = 0;
+    decimal amount = 0;
 }
 
-<h1>Ваш Кошик</h1>
-<br />
+<div class="row">
+    <div class="col-3">
+        <h1>Ваш Кошик</h1>
+    </div>
+    <div class="col-9"><h1 id="sum"></h1></div>
+</div>
 
 
 <table class="table">
@@ -14,13 +20,16 @@
         <tr>
             <th style="width: 20%"></th>
             <th>@Html.DisplayNameFor(model => model.Product.Name)</th>
-            <th class="text-right" style="width: 15%">Ціна</th>
+            <th class="text-right" style="width: 12%">Ціна</th>
+            <th class="text-right" style="width: 12%">Кількість</th>
+            <th class="text-right" style="width: 12%">Вартість</th>
             <th style="width: 30%"></th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
+            amount = (item.Product.Price * item.Quantity);
             <tr>
                 <td>
                     <img src="@Html.DisplayFor(modelItem => item.Product.Image)" alt="." style="width: 75%; border-radius: 5px" />
@@ -30,11 +39,33 @@
                     @Html.DisplayFor(modelItem => item.Product.Price)
                 </td>
                 <td class="text-right">
-                    <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
+                    @item.Quantity
+                </td>
+                <td class="text-right">
+                    @amount
+                </td>
+                <td class="text-right">
+                    <a asp-action="Edit" asp-route-id="@item.Id">Змінити кількість</a> |
                     <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
                 </td>
             </tr>
+            sum += amount;
         }
     </tbody>
 </table>
+
+<div>
+    <a asp-area="" asp-controller="Products" asp-action="Index">Повернутися до списку продуктів</a>
+</div>
+
+
+@section scripts
+    {
+    <script>
+        $(document).ready(() => {
+            var total = $('#sum');
+            total.text(`вартість товарів: @sum`);
+            total.css('text-align', 'right');
+        });
+    </script>
+}
