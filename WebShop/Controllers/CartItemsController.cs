@@ -8,16 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using WebShop.Data;
 using WebShop.Models;
 using Microsoft.AspNetCore.Authorization;
+using WebShop.Controllers.Shared;
 
 namespace WebShop.Controllers
 {
-    public class StatInfo
-    {
-        public int Count { get; set; }
-        public decimal Amount { get; set; }
-    }
-
-
     [Authorize]
     public class CartItemsController : Controller
     {
@@ -36,6 +30,7 @@ namespace WebShop.Controllers
                 .Include(x => x.ApplicationUser)
                 .Include(x => x.Product).Where(x => x.ApplicationUser.UserName == User.Identity.Name).ToList();
             var existingItem = currentUserCartItems.Where(c => c.ProductId == productId).FirstOrDefault();
+            var userId = _context.Users.Where(u => u.UserName == User.Identity.Name).First().Id;
             if (existingItem != null)
             {
                 existingItem.Quantity++;
@@ -44,43 +39,18 @@ namespace WebShop.Controllers
             {
                 _context.CartItems.Add(new CartItem()
                 {
-                    UserId = currentUserCartItems.First().UserId,
+                    UserId = userId,
                     ProductId = productId,
                     Quantity = 1
                 });
             }
             _context.SaveChanges();
 
-            return GetStatInfo();
+            return new StatInfo().GetStatInfo(_context, User.Identity.Name);
         }
 
-        [HttpPost]
-        [AllowAnonymous]
-        public StatInfo GetStatInfo()
-        {
-            var currentUser = _context.ApplicationUsers
-                .Where(u => u.UserName == User.Identity.Name).FirstOrDefault();
-            if (currentUser == null)
-            {
-                return new StatInfo() { Count = 0, Amount = 0.00M };
-            }
-            else
-            {
-                int count = default;
-                decimal amount = 0.00M;
-                var currentUserCartItems = _context.CartItems
-                    .Include(x => x.ApplicationUser)
-                    .Include(x => x.Product).Where(x => x.ApplicationUser.UserName == User.Identity.Name).ToList();
-                count = currentUserCartItems.Count;
-                foreach (var cartItem in currentUserCartItems)
-                {
-                    amount += cartItem.Product.Price * cartItem.Quantity;
-                }
-                StatInfo si = new() { Count = count, Amount = amount };
-                return si;
-            }
-        }
-        //->
+        //[HttpPost]
+        //[AllowAnonymous]
 
         // GET: CartItems
         public async Task<IActionResult> Index()
@@ -229,6 +199,22 @@ namespace WebShop.Controllers
         private bool CartItemExists(int id)
         {
             return _context.CartItems.Any(e => e.Id == id);
+        }
+
+        //POST: CartItems/Clear/
+        [HttpPost, ActionName("Clear")]
+        public async Task<IActionResult> Clear()
+        {
+            var userId = _context.Users.Where(u => u.UserName == User.Identity.Name).First().Id;
+            var cardItems = _context.CartItems.ToList();
+
+            foreach(var ci in cardItems)
+            {
+                if (ci.UserId == userId) _context.CartItems.Remove(ci);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index", "Products");
         }
     }
 }

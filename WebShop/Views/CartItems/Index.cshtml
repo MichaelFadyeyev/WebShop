@@ -3,17 +3,12 @@
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    decimal sum = 0;
+    decimal totalAmount = 0;
     decimal amount = 0;
+    int count = Model.Count();
 }
 
-<div class="row">
-    <div class="col-3">
-        <h1>Ваш Кошик</h1>
-    </div>
-    <div class="col-9"><h1 id="sum"></h1></div>
-</div>
-
+<h1>Ваш Кошик</h1>
 
 <table class="table">
     <thead>
@@ -23,7 +18,7 @@
             <th class="text-right" style="width: 12%">Ціна</th>
             <th class="text-right" style="width: 12%">Кількість</th>
             <th class="text-right" style="width: 12%">Вартість</th>
-            <th style="width: 30%"></th>
+            <th style="width: 30%" id="statInfo"></th>
         </tr>
     </thead>
     <tbody>
@@ -49,23 +44,27 @@
                     <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
                 </td>
             </tr>
-            sum += amount;
+            totalAmount += amount;
         }
     </tbody>
 </table>
 
-<div>
-    <a asp-area="" asp-controller="Products" asp-action="Index">Повернутися до списку продуктів</a>
-</div>
+<form asp-controller="CartItems" asp-action="Clear" style="display: inline-block">
+    <input type="submit" value="Очистити кошик" class="btn btn-danger" /> |
+</form>
+<form asp-controller="OrderItems" asp-action="Create" style="display: inline-block">
+    <input type="submit" value="Придбати" class="btn btn-success" /> |
+</form>
+<a asp-area="" asp-controller="Products" asp-action="Index">Повернутися до списку товарів</a>
 
 
-@section scripts
-    {
+@section scripts{
     <script>
         $(document).ready(() => {
-            var total = $('#sum');
-            total.text(`вартість товарів: @sum`);
-            total.css('text-align', 'right');
+            var statInfo = $('#statInfo');
+            var formattedAmount = (parseFloat(@totalAmount).toFixed(2)).replace('.', ',');
+            statInfo.text(`товарів: @count / вартість: ${formattedAmount}`);
+            statInfo.css('text-align', 'right');
         });
     </script>
 }

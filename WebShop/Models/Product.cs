@@ -35,9 +35,11 @@ namespace WebShop.Models
 
         // навігаційні властивості
         [ForeignKey("CategoryId")]
+        [Display(Name = "Категорія")]
         public virtual Category Category { get; set; }
 
         [ForeignKey("ProducerId")]
+        [Display(Name = "Виробник")]
         public virtual Producer Producer { get; set; }
 
         public virtual List<OrderItem> Items { get; set; }

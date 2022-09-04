@@ -1,5 +1,4 @@
-﻿@*@model IEnumerable<WebShop.Models.Product>*@
-@model WebShop.ViewModels.FilterViewModel
+﻿@model WebShop.ViewModels.FilterViewModel
 @addTagHelper *, WebShop
 
 @{
@@ -13,29 +12,22 @@
         @if (User.Identity.Name == "admin123@ukr.net")
         {
             <a asp-action="Create" asp-route-id="@Model.Products">Додати товар</a>
-            <br />
         }
     </div>
+    <br />
 
     <div class="col-md-3" style="text-align: right;">
-        <span id="count" style="color: green; font-weight: bold;">0</span>
+        <span id="count" style="color: green; font-weight: bold;">@ViewBag.CartCount</span>
         /
-        <span id="amount" style="color: red; font-weight: bold;">0.0</span>
+        <span id="amount" style="color: red; font-weight: bold;">@ViewBag.CartAmount</span>
         &nbsp;&nbsp;&nbsp;
         <a asp-controller="CartItems" asp-action="Index" title="Перейти до кошика">
             <img src="~/Images/cart.png" alt="." style="width: 50px" />
         </a>
     </div>
 </div>
-
-
-<p>
-    @if (User.Identity.Name == "admin_123@ukr.net")
-    {
-
-        <a asp-action="Create">Create New</a>
-    }
-</p>
+<hr />
+<br />
 
 
 <div class="row" id="gallery">
@@ -47,7 +39,6 @@
                 <div class="col-md-3">
                     <div class="card" style="width: 100%; margin-bottom: 10px">
                         <img src="@item.Image" class="card-img-top" alt="-" style="height: 150px" />
-                        @*<img src="@Html.DisplayFor(modelItem=>item.Image)" class="card-img-top" alt="-" style="height: 150px" />*@
                         <div class="card-body" style="text-align: center">
 
                             <input type="hidden" class="productId" value="@item.Id" />
@@ -79,7 +70,7 @@
         </p>
     </div>
     <!-- col-2 -->
-    <div class="col-md-3" style="padding: 15px; border: 1px solid silver; text-align: center">
+    <div class="card col-md-3" style="padding: 15px; text-align: center">
         <h2 style="text-align: center">Фільтри</h2>
         <hr />
         <form method="get">
@@ -117,7 +108,9 @@
                     dataType: 'json',
                     success: function(result) {
                         $('#count').html(result.count);
-                        $('#amount').html(result.amount);
+                        let formattedAmount = parseFloat(result.amount)
+                            .toFixed(2).replace('.', ',');
+                        $('#amount').html(formattedAmount);
                     }
                 });
                 //alert(`Товап із ID: ${pid} - успішно доданий до кошика`);
