@@ -3,24 +3,28 @@
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    decimal totalAmount = 0;
+    decimal amount = 0;
+    int count = Model.Count();
 }
 
 <h1>Ваш Кошик</h1>
-<br />
-
 
 <table class="table">
     <thead>
         <tr>
             <th style="width: 20%"></th>
             <th>@Html.DisplayNameFor(model => model.Product.Name)</th>
-            <th class="text-right" style="width: 15%">Ціна</th>
-            <th style="width: 30%"></th>
+            <th class="text-right" style="width: 12%">Ціна</th>
+            <th class="text-right" style="width: 12%">Кількість</th>
+            <th class="text-right" style="width: 12%">Вартість</th>
+            <th style="width: 30%" id="statInfo"></th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
+            amount = (item.Product.Price * item.Quantity);
             <tr>
                 <td>
                     <img src="@Html.DisplayFor(modelItem => item.Product.Image)" alt="." style="width: 75%; border-radius: 5px" />
@@ -30,11 +34,37 @@
                     @Html.DisplayFor(modelItem => item.Product.Price)
                 </td>
                 <td class="text-right">
-                    <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
+                    @item.Quantity
+                </td>
+                <td class="text-right">
+                    @amount
+                </td>
+                <td class="text-right">
+                    <a asp-action="Edit" asp-route-id="@item.Id">Змінити кількість</a> |
                     <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
                 </td>
             </tr>
+            totalAmount += amount;
         }
     </tbody>
 </table>
+
+<form asp-controller="CartItems" asp-action="Clear" style="display: inline-block">
+    <input type="submit" value="Очистити кошик" class="btn btn-danger" /> |
+</form>
+<form asp-controller="OrderItems" asp-action="Create" style="display: inline-block">
+    <input type="submit" value="Придбати" class="btn btn-success" /> |
+</form>
+<a asp-area="" asp-controller="Products" asp-action="Index">Повернутися до списку товарів</a>
+
+
+@section scripts{
+    <script>
+        $(document).ready(() => {
+            var statInfo = $('#statInfo');
+            var formattedAmount = (parseFloat(@totalAmount).toFixed(2)).replace('.', ',');
+            statInfo.text(`товарів: @count / вартість: ${formattedAmount}`);
+            statInfo.css('text-align', 'right');
+        });
+    </script>
+}

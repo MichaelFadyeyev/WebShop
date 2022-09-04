@@ -30,20 +30,23 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Contact">Контакти</a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropDown"
+                        @if (User.Identity.Name == "admin123@ukr.net")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropDown"
                                data-bs-toggle="dropdown" area-expanded="false">
-                                Адмін
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropDown">
-                                <li><a class="dropdown-item" asp-controller="Products" asp-action="Index">Товари</a></li>
-                                <li><a class="dropdown-item" asp-controller="Categories" asp-action="Index">Категорії</a></li>
-                                <li><a class="dropdown-item" asp-controller="Producers" asp-action="Index">Виробники</a></li>
-                                <li><a class="dropdown-item" asp-controller="Orders" asp-action="Index">Замовлення</a></li>
-                                <li><a class="dropdown-item" asp-controller="Roles" asp-action="Index">Дозволи</a></li>
-                                <li><a class="dropdown-item" asp-controller="Users" asp-action="Index">Користувачі</a></li>
-                            </ul>
-                        </li>
+                                    Адмін
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropDown">
+                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Index">Товари</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Categories" asp-action="Index">Категорії</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Producers" asp-action="Index">Виробники</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Orders" asp-action="Index">Замовлення</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Roles" asp-action="Index">Дозволи</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Users" asp-action="Index">Користувачі</a></li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
@@ -62,7 +65,7 @@
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

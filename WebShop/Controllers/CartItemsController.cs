@@ -8,16 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using WebShop.Data;
 using WebShop.Models;
 using Microsoft.AspNetCore.Authorization;
+using WebShop.Controllers.Shared;
 
 namespace WebShop.Controllers
 {
-    public class StatInfo
-    {
-        public int Count { get; set; }
-        public decimal Amount { get; set; }
-    }
-
-
     [Authorize]
     public class CartItemsController : Controller
     {
@@ -32,46 +26,31 @@ namespace WebShop.Controllers
         [HttpPost]
         public StatInfo AddProductToCart(int productId)
         {
-
-            var currentUser = _context.ApplicationUsers
-                .Single(u => u.UserName == User.Identity.Name);
-            _context.CartItems.Add(new CartItem()
+            var currentUserCartItems = _context.CartItems
+                .Include(x => x.ApplicationUser)
+                .Include(x => x.Product).Where(x => x.ApplicationUser.UserName == User.Identity.Name).ToList();
+            var existingItem = currentUserCartItems.Where(c => c.ProductId == productId).FirstOrDefault();
+            var userId = _context.Users.Where(u => u.UserName == User.Identity.Name).First().Id;
+            if (existingItem != null)
             {
-                UserId = currentUser.Id,
-                ProductId = productId
-            });
-            _context.SaveChanges();
-
-            return GetStatInfo();
-        }
-
-        [HttpPost]
-        [AllowAnonymous]
-        public StatInfo GetStatInfo()
-        {
-            var currentUser = _context.ApplicationUsers
-                .Where(u => u.UserName == User.Identity.Name).FirstOrDefault();
-            if (currentUser == null)
-            {
-                return new StatInfo() { Count = 0, Amount = 0.00M };
+                existingItem.Quantity++;
             }
             else
             {
-                int count = default;
-                decimal amount = 0.00M;
-                var currentUserCartItems = _context.CartItems
-                    .Include(x => x.ApplicationUser)
-                    .Include(x => x.Product).Where(x => x.ApplicationUser.UserName == User.Identity.Name).ToList();
-                count = currentUserCartItems.Count;
-                foreach (var cartItem in currentUserCartItems)
+                _context.CartItems.Add(new CartItem()
                 {
-                    amount += cartItem.Product.Price;
-                }
-                StatInfo si = new() { Count = count, Amount = amount };
-                return si;
+                    UserId = userId,
+                    ProductId = productId,
+                    Quantity = 1
+                });
             }
+            _context.SaveChanges();
+
+            return new StatInfo().GetStatInfo(_context, User.Identity.Name);
         }
-        //->
+
+        //[HttpPost]
+        //[AllowAnonymous]
 
         // GET: CartItems
         public async Task<IActionResult> Index()
@@ -137,11 +116,12 @@ namespace WebShop.Controllers
             }
 
             var cartItem = await _context.CartItems.FindAsync(id);
-            cartItem.Product = _context.Products.Single(p => p.Id == id);
+            cartItem.Product = _context.Products.Where(p => p.Id == cartItem.ProductId).FirstOrDefault();
             if (cartItem == null)
             {
                 return NotFound();
             }
+
             ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", cartItem.UserId);
             ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Image", cartItem.ProductId);
             return View(cartItem);
@@ -152,7 +132,7 @@ namespace WebShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ProductId,UserId")] CartItem cartItem)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ProductId,UserId")] CartItem cartItem, int quantity)
         {
             if (id != cartItem.Id)
             {
@@ -163,6 +143,7 @@ namespace WebShop.Controllers
             {
                 try
                 {
+                    if (quantity > 0) cartItem.Quantity = quantity;
                     _context.Update(cartItem);
                     await _context.SaveChangesAsync();
                 }
@@ -218,6 +199,22 @@ namespace WebShop.Controllers
         private bool CartItemExists(int id)
         {
             return _context.CartItems.Any(e => e.Id == id);
+        }
+
+        //POST: CartItems/Clear/
+        [HttpPost, ActionName("Clear")]
+        public async Task<IActionResult> Clear()
+        {
+            var userId = _context.Users.Where(u => u.UserName == User.Identity.Name).First().Id;
+            var cardItems = _context.CartItems.ToList();
+
+            foreach(var ci in cardItems)
+            {
+                if (ci.UserId == userId) _context.CartItems.Remove(ci);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index", "Products");
         }
     }
 }

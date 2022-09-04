@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using WebShop.Data;
 using WebShop.Models;
 using WebShop.ViewModels;
+using WebShop.Controllers.Shared;
 
 namespace WebShop.Controllers
 {
@@ -18,6 +19,7 @@ namespace WebShop.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        //private StatInfo _statInfo;
 
         private readonly string[] allowedExt = new string[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
         private string defaultImagePath = "/Images/default_image.jpg";
@@ -70,6 +72,10 @@ namespace WebShop.Controllers
                 PageViewModel = pageViewModel
             };
 
+            var statInfo = new StatInfo().GetStatInfo(_context, User.Identity.Name);
+
+            ViewData["CartCount"] = statInfo.Count;
+            ViewData["CartAmount"] = statInfo.Amount;
             //* 8
             return View(viewModel);
         }
