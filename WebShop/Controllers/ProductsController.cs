@@ -113,10 +113,9 @@ namespace WebShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Price,IsAvailable,Image,CategoryId,ProducerId")] Product product, IFormFile uploadFile)
+        public async Task<IActionResult> Create([Bind("Name,Price,IsAvailable,Image,CategoryId,ProducerId")] Product product, IFormFile uploadFile)
         {
             if (ModelState.IsValid)
-            //if (true)
             {
                 try
                 {
@@ -126,7 +125,7 @@ namespace WebShop.Controllers
                         string ext = Path.GetExtension(uploadFile.FileName);
                         if (allowedExt.Contains(ext))
                         {
-                            string path = $"/Images/{name}";
+                            string path = $"/Images/{product.CategoryId}-{product.ProducerId}-{NextProductId}{ext}";
                             string serverPath = _env.WebRootPath + path;
                             using (FileStream fs = new(serverPath, FileMode.Create, FileAccess.Write))
                                 await uploadFile.CopyToAsync(fs);
@@ -134,7 +133,7 @@ namespace WebShop.Controllers
                             product.Image = path;
                         }
                         else product.Image = defaultImagePath;
-                    } 
+                    }
                     else product.Image = defaultImagePath;
                 }
                 catch (Exception)
@@ -188,18 +187,30 @@ namespace WebShop.Controllers
                 {
                     if (uploadFile != null)
                     {
+                        string currentImage = _env.WebRootPath + product.Image;
+
+                        DeleteImage(currentImage);
+
                         string name = uploadFile.FileName;
                         string ext = Path.GetExtension(uploadFile.FileName);
                         if (allowedExt.Contains(ext))
                         {
-                            string path = $"/Images/{name}";
+                            string path = $"/Images/{product.CategoryId}-{product.ProducerId}-{product.Id}{ext}";
                             string serverPath = _env.WebRootPath + path;
                             using (FileStream fs = new FileStream(serverPath, FileMode.Create, FileAccess.Write))
                                 await uploadFile.CopyToAsync(fs);
                             product.Image = path;
-
                         }
                     }
+                    else if(Path.GetFileNameWithoutExtension(product.Image) != "default_image")
+                    {
+                        string ext = Path.GetExtension(product.Image);
+                        string path = $"/Images/{product.CategoryId}-{product.ProducerId}-{product.Id}{ext}";
+
+                        System.IO.File.Move(_env.WebRootPath + product.Image, _env.WebRootPath + path);
+                        product.Image = path;
+                    }
+
                     _context.Products.Update(product);
                     await _context.SaveChangesAsync();
                 }
@@ -219,6 +230,7 @@ namespace WebShop.Controllers
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "CategoryName", product.CategoryId);
             ViewData["ProducerId"] = new SelectList(_context.Producers, "Id", "ProducerName", product.ProducerId);
             return View(product);
+
         }
 
         // GET: Products/Delete/5
@@ -247,8 +259,14 @@ namespace WebShop.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var product = await _context.Products.FindAsync(id);
+
+            string imageFile = _env.WebRootPath + product.Image;
+
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
+
+            DeleteImage(imageFile);
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -258,6 +276,15 @@ namespace WebShop.Controllers
         }
 
         //*
+        private void DeleteImage(string image)
+        {
+            if (System.IO.File.Exists(image) && Path.GetFileNameWithoutExtension(image) != "default_image")
+                System.IO.File.Delete(image);
+        }
+
+        private int NextProductId =>
+            _context.Products.Count() == 0 ? 1 : _context.Products.Max(p => p.Id) + 1;
         //->
+
     }
 }

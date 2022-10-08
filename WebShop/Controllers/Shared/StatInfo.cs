@@ -35,8 +35,8 @@ namespace WebShop.Controllers.Shared
                 {
                     amount += cartItem.Product.Price * cartItem.Quantity;
                 }
-                StatInfo si = new() { Count = count, Amount = amount };
-                return si;
+
+                return new StatInfo () { Count = count, Amount = amount }; ;
             }
         }
 

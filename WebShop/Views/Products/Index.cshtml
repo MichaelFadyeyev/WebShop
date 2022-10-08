@@ -76,11 +76,11 @@
         <form method="get">
             <div class="form-group">
                 <label class="control-label">Категорія</label>
-                <select name="cid" asp-items="Model.Categories" class="form-control"></select>
+                <select name="cid" asp-items="Model.Categories" class="form-control" title="cid_"></select>
             </div>
             <div class="form-group">
                 <label class="control-label">Виробники</label>
-                <select name="pid" asp-items="Model.Producers" class="form-control"></select>
+                <select name="pid" asp-items="Model.Producers" class="form-control" title="pid_"></select>
             </div>
             <p>
                 <input type="submit" value="Фільтр" class="btn btn-sm btn-primary" style="width: 120px;" />
@@ -113,15 +113,13 @@
                         $('#amount').html(formattedAmount);
                     }
                 });
-                //alert(`Товап із ID: ${pid} - успішно доданий до кошика`);
+                //alert(`Товар із Id: ${pid} - успішно доданий до кошика`);
             });
 
             // 2
             $.ajax({
                 type: 'POST',
-                url: 'CartItems/GetStatInfo',
-                data: { productId: pid },
-                dataType: 'json',
+                url: '/CartItems/GetStatInfo',
                 success: function(result) {
                     $('#count').html(result.count);
                     $('#amount').html(result.amount);

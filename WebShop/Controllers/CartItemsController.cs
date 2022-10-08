@@ -22,7 +22,7 @@ namespace WebShop.Controllers
             _context = context;
         }
 
-        //*
+        //* POST: CartItems/AddProductToCart
         [HttpPost]
         public StatInfo AddProductToCart(int productId)
         {
@@ -49,8 +49,14 @@ namespace WebShop.Controllers
             return new StatInfo().GetStatInfo(_context, User.Identity.Name);
         }
 
-        //[HttpPost]
-        //[AllowAnonymous]
+
+        //* POST: CartItems/GetStatInfo
+        [HttpPost]
+        [AllowAnonymous]
+        public StatInfo GetStatInfo() =>
+             new StatInfo().GetStatInfo(_context, User.Identity.Name);
+
+
 
         // GET: CartItems
         public async Task<IActionResult> Index()
@@ -208,7 +214,7 @@ namespace WebShop.Controllers
             var userId = _context.Users.Where(u => u.UserName == User.Identity.Name).First().Id;
             var cardItems = _context.CartItems.ToList();
 
-            foreach(var ci in cardItems)
+            foreach (var ci in cardItems)
             {
                 if (ci.UserId == userId) _context.CartItems.Remove(ci);
             }
